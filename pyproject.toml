@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "case-antaq"
+version = "0.1.0"
+description = ""
+authors = ["Rafael Panegassi <rm.panegassi@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.0.0"
+boto3 = "^1.36.26"
+python-dotenv = "^1.0.1"
+flake8 = "^7.1.2"
+isort = "^6.0.0"
+loguru = "^0.7.3"
+apache-airflow = "^2.10.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["src"]
