@@ -1,10 +1,10 @@
 import os
-import re
-import datetime
-from dotenv import load_dotenv
-from loguru import logger
+
 import boto3
 from botocore.client import Config
+from dotenv import load_dotenv
+from loguru import logger
+
 
 def create_s3_client():
     required_vars = ["ENDPOINT_URL", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"]
@@ -26,6 +26,7 @@ def create_s3_client():
     s3_client.list_buckets()
     logger.info("S3 client initialized successfully.")
     return s3_client
+
 
 def copy_atracacao_files():
     source_bucket = os.getenv("RAW_BUCKET")
@@ -72,11 +73,13 @@ def copy_atracacao_files():
             except Exception as e:
                 logger.error(f"Error copying file {key}: {e}")
 
+
 def main():
     load_dotenv()
     logger.info("Starting Taxa Ocupacao Com Carga copy script.")
     copy_atracacao_files()
     logger.info("Script finished.")
+
 
 if __name__ == "__main__":
     main()

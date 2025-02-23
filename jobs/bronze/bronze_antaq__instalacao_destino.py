@@ -1,9 +1,11 @@
-import os
 import datetime
-from dotenv import load_dotenv
-from loguru import logger
+import os
+
 import boto3
 from botocore.client import Config
+from dotenv import load_dotenv
+from loguru import logger
+
 
 def create_s3_client():
     required_vars = ["ENDPOINT_URL", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"]
@@ -26,6 +28,7 @@ def create_s3_client():
     logger.info("S3 client initialized successfully.")
     return s3_client
 
+
 def copy_file():
     # Dynamic date in the format "DD_MM_YYYY"
     today_str = datetime.datetime.now().strftime("%d_%m_%Y")
@@ -46,11 +49,13 @@ def copy_file():
     except Exception as e:
         logger.error(f"Error copying file {source_key}: {e}")
 
+
 def main():
     load_dotenv()
     logger.info("Starting copy script: Instalacao_Destino")
     copy_file()
     logger.info("Script finished.")
+
 
 if __name__ == "__main__":
     main()

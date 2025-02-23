@@ -27,16 +27,17 @@ def create_s3_client():
         endpoint_url=endpoint_url,
         region_name=region_name
     )
-    s3_client.list_buckets()  # Testa a conexão
+    s3_client.list_buckets()
     logger.info("S3 client initialized successfully.")
     return s3_client
 
+
 def validate_url(url, headers):
-    """Valida se a URL está acessível."""
     try:
         response = requests.head(url, timeout=5, headers=headers)
         if response.status_code == 403:
-            logger.warning(f"HEAD request returned 403 for URL: {url}. Continuing execution.")
+            logger.warning(f"HEAD request returned 403 for URL: {url}. "
+                           "Continuing execution.")
         else:
             response.raise_for_status()
         logger.info(f"URL successfully validated: {url}")
@@ -44,8 +45,9 @@ def validate_url(url, headers):
         logger.error(f"Error validating URL: {url}. Details: {e}")
         raise
 
-def download_and_extract_zip(url, identifier, dest_folder_in_bucket, s3_client, bucket_name, headers):
-    """Faz o download de um ZIP, extrai os arquivos e os envia para o S3."""
+
+def download_and_extract_zip(url, identifier, dest_folder_in_bucket,
+                             s3_client, bucket_name, headers):
     logger.info(f"Attempting to download: {url}")
     response = requests.get(url, timeout=10, headers=headers)
     response.raise_for_status()
@@ -69,14 +71,17 @@ def download_and_extract_zip(url, identifier, dest_folder_in_bucket, s3_client, 
                 new_file_name = f"{root_name}_{identifier}-{today_str}{ext}"
 
                 extracted_path = os.path.join(tmp_dir, new_file_name)
-                with zip_ref.open(info) as extracted_file, open(extracted_path, "wb") as out_file:
-                    out_file.write(extracted_file.read())
+                with zip_ref.open(info) as extracted_file:
+                    with open(extracted_path, "wb") as out_file:
+                        out_file.write(extracted_file.read())
 
                 object_name_in_bucket = f"{dest_folder_in_bucket}/{new_file_name}"
                 logger.info(f"Uploading to: {bucket_name}/{object_name_in_bucket}")
-                s3_client.upload_file(Filename=extracted_path, Bucket=bucket_name, Key=object_name_in_bucket)
+                s3_client.upload_file(Filename=extracted_path,
+                                      Bucket=bucket_name, Key=object_name_in_bucket)
 
     logger.info(f"All files from '{url}' have been processed successfully.")
+
 
 def main():
     load_dotenv()
@@ -94,21 +99,20 @@ def main():
     if not base_url:
         raise ValueError("BASE_URL not set in .env file.")
 
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+               "AppleWebKit/537.36"}
 
-    # Testa conexão inicial com um arquivo conhecido
     logger.info("Testing initial connection with a known file...")
     test_url = f"{base_url}/2021.zip"
     validate_url(test_url, headers)
 
-    # Processa arquivos dos anos
     years = [2021, 2022, 2023]
     for year in years:
         zip_url = f"{base_url}/{year}.zip"
         destination_folder = f"year/{year}"
-        download_and_extract_zip(zip_url, year, destination_folder, s3_client, bucket_name, headers)
+        download_and_extract_zip(zip_url, year, destination_folder,
+                                 s3_client, bucket_name, headers)
 
-    # Processa arquivos de registro
     register_files = [
         "instalacaoOrigem.zip",
         "instalacaoDestino.zip",
@@ -118,9 +122,11 @@ def main():
     for file_name in register_files:
         zip_url = f"{base_url}/{file_name}"
         destination_folder = "register"
-        download_and_extract_zip(zip_url, "register", destination_folder, s3_client, bucket_name, headers)
+        download_and_extract_zip(zip_url, "register", destination_folder,
+                                 s3_client, bucket_name, headers)
 
     logger.info("ANTAQ crawler completed successfully!")
+
 
 if __name__ == "__main__":
     main()
