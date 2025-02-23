@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Rafael Panegassi <rm.panegassi@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "jobs" },
+]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"

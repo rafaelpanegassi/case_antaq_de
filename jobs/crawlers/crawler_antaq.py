@@ -1,10 +1,13 @@
+import datetime
 import os
+import tempfile
+from zipfile import ZipFile
+
 import boto3
+import requests
 from dotenv import load_dotenv
 from loguru import logger
-from de_tools.utils.crawler_download import CrawlerDownload
 
-load_dotenv()
 
 def create_s3_client():
     required_vars = ["ENDPOINT_URL", "ACCESS_KEY", "SECRET_KEY"]
@@ -24,15 +27,65 @@ def create_s3_client():
         endpoint_url=endpoint_url,
         region_name=region_name
     )
-    s3_client.list_buckets()  # Test connection
+    s3_client.list_buckets()  # Testa a conexão
     logger.info("S3 client initialized successfully.")
     return s3_client
 
-def main():
-    logger.info("Starting ANTAQ crawler...")
-    logger.info(f"Variables: ENDPOINT_URL={os.getenv('ENDPOINT_URL')}, LANDING_BUCKET={os.getenv('LANDING_BUCKET')}, BASE_URL={os.getenv('BASE_URL')}")
+def validate_url(url, headers):
+    """Valida se a URL está acessível."""
+    try:
+        response = requests.head(url, timeout=5, headers=headers)
+        if response.status_code == 403:
+            logger.warning(f"HEAD request returned 403 for URL: {url}. Continuing execution.")
+        else:
+            response.raise_for_status()
+        logger.info(f"URL successfully validated: {url}")
+    except Exception as e:
+        logger.error(f"Error validating URL: {url}. Details: {e}")
+        raise
 
-    # Initialize S3 client and environment variables
+def download_and_extract_zip(url, identifier, dest_folder_in_bucket, s3_client, bucket_name, headers):
+    """Faz o download de um ZIP, extrai os arquivos e os envia para o S3."""
+    logger.info(f"Attempting to download: {url}")
+    response = requests.get(url, timeout=10, headers=headers)
+    response.raise_for_status()
+    logger.info(f"Download completed with status: {response.status_code}")
+
+    today_str = datetime.datetime.now().strftime("%d_%m_%Y")
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        zip_path = os.path.join(tmp_dir, f"{identifier}.zip")
+        with open(zip_path, "wb") as f:
+            f.write(response.content)
+        logger.info(f"ZIP downloaded to: {zip_path}")
+
+        with ZipFile(zip_path, 'r') as zip_ref:
+            for info in zip_ref.infolist():
+                if info.is_dir():
+                    continue
+
+                original_name = info.filename
+                base_original_name = os.path.basename(original_name)
+                root_name, ext = os.path.splitext(base_original_name)
+                new_file_name = f"{root_name}_{identifier}-{today_str}{ext}"
+
+                extracted_path = os.path.join(tmp_dir, new_file_name)
+                with zip_ref.open(info) as extracted_file, open(extracted_path, "wb") as out_file:
+                    out_file.write(extracted_file.read())
+
+                object_name_in_bucket = f"{dest_folder_in_bucket}/{new_file_name}"
+                logger.info(f"Uploading to: {bucket_name}/{object_name_in_bucket}")
+                s3_client.upload_file(Filename=extracted_path, Bucket=bucket_name, Key=object_name_in_bucket)
+
+    logger.info(f"All files from '{url}' have been processed successfully.")
+
+def main():
+    load_dotenv()
+    logger.info("Starting ANTAQ crawler...")
+    logger.info(
+        f"Variables: ENDPOINT_URL={os.getenv('ENDPOINT_URL')}, "
+        f"LANDING_BUCKET={os.getenv('LANDING_BUCKET')}, BASE_URL={os.getenv('BASE_URL')}"
+    )
+
     s3_client = create_s3_client()
     bucket_name = os.getenv("LANDING_BUCKET")
     if not bucket_name:
@@ -41,22 +94,21 @@ def main():
     if not base_url:
         raise ValueError("BASE_URL not set in .env file.")
 
-    # Create an instance of CrawlerDownload
-    crawler = CrawlerDownload(s3_client, bucket_name)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-    # Test initial connection with a known file
+    # Testa conexão inicial com um arquivo conhecido
     logger.info("Testing initial connection with a known file...")
     test_url = f"{base_url}/2021.zip"
-    crawler.validate_url(test_url)
+    validate_url(test_url, headers)
 
-    # Process years
+    # Processa arquivos dos anos
     years = [2021, 2022, 2023]
     for year in years:
         zip_url = f"{base_url}/{year}.zip"
         destination_folder = f"year/{year}"
-        crawler.download_and_extract_zip(zip_url, year, destination_folder)
+        download_and_extract_zip(zip_url, year, destination_folder, s3_client, bucket_name, headers)
 
-    # Process register files
+    # Processa arquivos de registro
     register_files = [
         "instalacaoOrigem.zip",
         "instalacaoDestino.zip",
@@ -66,7 +118,7 @@ def main():
     for file_name in register_files:
         zip_url = f"{base_url}/{file_name}"
         destination_folder = "register"
-        crawler.download_and_extract_zip(zip_url, "register", destination_folder)
+        download_and_extract_zip(zip_url, "register", destination_folder, s3_client, bucket_name, headers)
 
     logger.info("ANTAQ crawler completed successfully!")
 
