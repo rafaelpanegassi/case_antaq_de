@@ -83,13 +83,13 @@ def main():
     logger.info("Starting ANTAQ crawler...")
     logger.info(
         f"Variables: ENDPOINT_URL={os.getenv('ENDPOINT_URL')}, "
-        f"LANDING_BUCKET={os.getenv('LANDING_BUCKET')}, BASE_URL={os.getenv('BASE_URL')}"
+        f"RAW_BUCKET={os.getenv('RAW_BUCKET')}, BASE_URL={os.getenv('BASE_URL')}"
     )
 
     s3_client = create_s3_client()
-    bucket_name = os.getenv("LANDING_BUCKET")
+    bucket_name = os.getenv("RAW_BUCKET")
     if not bucket_name:
-        raise ValueError("LANDING_BUCKET not set in .env file.")
+        raise ValueError("RAW_BUCKET not set in .env file.")
     base_url = os.getenv("BASE_URL")
     if not base_url:
         raise ValueError("BASE_URL not set in .env file.")
