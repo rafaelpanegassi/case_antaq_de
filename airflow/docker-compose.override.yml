@@ -1,0 +1,78 @@
+services:
+  webserver:
+    volumes:
+      - ./dags:/opt/airflow/dags
+    environment:
+      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
+
+  scheduler:
+    volumes:
+      - ./dags:/opt/airflow/dags
+    environment:
+      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"  # MinIO API port
+      - "9001:9001"  # MinIO console port
+    environment:
+      - MINIO_ROOT_USER=minio_admin
+      - MINIO_ROOT_PASSWORD=minio_password
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - airflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootmysql
+      - MYSQL_DATABASE=antaq
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - airflow
+
+  s3_minio_buckets:
+    image: minio/mc:latest  # Use the MinIO Client image, which includes `mc`
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 minio_admin minio_password;
+      /usr/bin/mc rb --force minio/raw || true;
+      /usr/bin/mc mb minio/raw;
+      /usr/bin/mc rb --force minio/bronze || true;
+      /usr/bin/mc mb minio/bronze;
+      /usr/bin/mc rb --force minio/silver || true;
+      /usr/bin/mc mb minio/silver;
+      /usr/bin/mc rb --force minio/gold || true;
+      /usr/bin/mc mb minio/gold;
+      exit 0;
+      "
+    networks:
+      - airflow
+
+networks:
+  airflow:
+    driver: bridge
+
+volumes:
+  minio_data:
+  mysql_data:
