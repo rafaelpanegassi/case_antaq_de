@@ -6,7 +6,7 @@ import boto3
 from botocore.client import Config
 
 def create_s3_client():
-    required_vars = ["ENDPOINT_URL", "ACCESS_KEY", "SECRET_KEY"]
+    required_vars = ["ENDPOINT_URL", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"]
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
         raise ValueError(f"Missing required environment variables: {missing_vars}")
