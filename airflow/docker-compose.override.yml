@@ -4,27 +4,27 @@ services:
       - ./dags:/opt/airflow/dags
       - ../jobs:/opt/airflow/jobs
     environment:
-      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
+      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Intervalo para verificação dos DAGs
 
   scheduler:
     volumes:
       - ./dags:/opt/airflow/dags
       - ../jobs:/opt/airflow/jobs
     environment:
-      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
+      - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Intervalo para verificação dos DAGs
 
   minio:
     image: minio/minio:latest
     container_name: minio
     ports:
-      - "9000:9000"  # MinIO API port
-      - "9001:9001"  # MinIO console port
+      - "9000:9000"  # Porta da API do MinIO
+      - "9001:9001"  # Porta do console do MinIO
     environment:
       - MINIO_ROOT_USER=minio_admin
       - MINIO_ROOT_PASSWORD=minio_password
     command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - ./minio_data:/data   # Persistência dos dados do MinIO no host
     restart: unless-stopped
     networks:
       - airflow
@@ -45,13 +45,13 @@ services:
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=admin
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql  # Persistência dos dados do MySQL no host
     restart: unless-stopped
     networks:
       - airflow
 
   s3_minio_buckets:
-    image: minio/mc:latest  # Use the MinIO Client image, which includes `mc`
+    image: minio/mc:latest  # Cliente MinIO para gerenciamento
     depends_on:
       minio:
         condition: service_healthy
@@ -74,7 +74,3 @@ services:
 networks:
   airflow:
     driver: bridge
-
-volumes:
-  minio_data:
-  mysql_data:
