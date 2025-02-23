@@ -10,14 +10,14 @@ from loguru import logger
 
 
 def create_s3_client():
-    required_vars = ["ENDPOINT_URL", "ACCESS_KEY", "SECRET_KEY"]
+    required_vars = ["ENDPOINT_URL", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"]
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
         raise ValueError(f"Missing required environment variables: {missing_vars}")
 
     endpoint_url = os.getenv("ENDPOINT_URL")
-    access_key = os.getenv("ACCESS_KEY")
-    secret_key = os.getenv("SECRET_KEY")
+    access_key = os.getenv("MINIO_ROOT_USER")
+    secret_key = os.getenv("MINIO_ROOT_PASSWORD")
     region_name = os.getenv("REGION_NAME", "us-east-1")
 
     s3_client = boto3.client(

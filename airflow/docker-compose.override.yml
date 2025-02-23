@@ -2,12 +2,14 @@ services:
   webserver:
     volumes:
       - ./dags:/opt/airflow/dags
+      - ../jobs:/opt/airflow/jobs
     environment:
       - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
 
   scheduler:
     volumes:
       - ./dags:/opt/airflow/dags
+      - ../jobs:/opt/airflow/jobs
     environment:
       - AIRFLOW__CORE__DAG_DIR_LIST_INTERVAL=10  # Directory check interval in seconds
 
