@@ -12,16 +12,14 @@ def create_s3_client():
         raise ValueError(f"Missing required environment variables: {missing_vars}")
 
     endpoint_url = os.getenv("ENDPOINT_URL")
-    access_key = os.getenv("ACCESS_KEY")
-    secret_key = os.getenv("SECRET_KEY")
-    region_name = os.getenv("REGION_NAME", "us-east-1")
+    access_key = os.getenv("MINIO_ROOT_USER")
+    secret_key = os.getenv("MINIO_ROOT_PASSWORD")
 
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
         endpoint_url=endpoint_url,
-        region_name=region_name,
         config=Config(signature_version="s3v4")
     )
     s3_client.list_buckets()
@@ -29,30 +27,30 @@ def create_s3_client():
     return s3_client
 
 def copy_file():
-    # Data dinâmica no formato "DD_MM_YYYY"
+    # Dynamic date in the format "DD_MM_YYYY"
     today_str = datetime.datetime.now().strftime("%d_%m_%Y")
 
-    source_bucket = os.getenv("SOURCE_BUCKET", "landing-zone")
-    destination_bucket = os.getenv("DEST_BUCKET", "bronze")
+    source_bucket = os.getenv("RAW_BUCKET")
+    destination_bucket = os.getenv("BRONZE_BUCKET")
 
-    # Monta o nome do arquivo usando a data dinâmica
+    # Build the filename using the dynamic date
     source_key = f"register/Instalacao_Destino_register-{today_str}.txt"
-    destination_key = f"instalacao/Instalacao_Destino_register-{today_str}.txt"
+    destination_key = f"instalacao/instalacao_destino/Instalacao_Destino_register-{today_str}.txt"
 
     s3_client = create_s3_client()
     copy_source = {"Bucket": source_bucket, "Key": source_key}
 
     try:
         s3_client.copy_object(CopySource=copy_source, Bucket=destination_bucket, Key=destination_key)
-        logger.info(f"Arquivo copiado com sucesso: {source_key} -> {destination_key}")
+        logger.info(f"File copied successfully: {source_key} -> {destination_key}")
     except Exception as e:
-        logger.error(f"Erro ao copiar o arquivo {source_key}: {e}")
+        logger.error(f"Error copying file {source_key}: {e}")
 
 def main():
     load_dotenv()
-    logger.info("Iniciando o script de cópia: Instalacao_Destino")
+    logger.info("Starting copy script: Instalacao_Destino")
     copy_file()
-    logger.info("Script finalizado.")
+    logger.info("Script finished.")
 
 if __name__ == "__main__":
     main()
