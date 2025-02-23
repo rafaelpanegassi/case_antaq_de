@@ -13,7 +13,7 @@ services:
       - minio_data:/data
     restart: unless-stopped
     networks:
-      - airflow
+      - code-with-data
 
   mysql:
     image: mysql:latest
@@ -29,11 +29,12 @@ services:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
     networks:
-      - airflow
+      - code-with-data
 
 networks:
-  airflow:
+  code-with-data:
     driver: bridge
+    external: true
 
 volumes:
   minio_data:
