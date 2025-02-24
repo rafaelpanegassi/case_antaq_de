@@ -3,7 +3,6 @@ import duckdb
 import pandas as pd
 import numpy as np
 import mysql.connector
-from mysql.connector import errorcode
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -46,7 +45,7 @@ def create_table_if_not_exists(conn, table_name, df):
 
 def insert_data(conn, table_name, df, batch_size=1000):
     """
-    Insere os dados do DataFrame na tabela MySQL em lotes (batchs) usando executemany.
+    Insere os dados do DataFrame na tabela MySQL em lotes usando executemany.
     Converte valores nulos, timestamps e tipos NumPy para formatos compatíveis com MySQL.
     """
     placeholders = ", ".join(["%s"] * len(df.columns))
@@ -57,13 +56,10 @@ def insert_data(conn, table_name, df, batch_size=1000):
     for row in df.itertuples(index=False, name=None):
         new_row = []
         for val in row:
-            # Se o valor é nulo ou NaT, mantém como None
             if pd.isnull(val):
                 new_row.append(None)
-            # Se for timestamp, converte para string no formato MySQL
             elif isinstance(val, pd.Timestamp):
                 new_row.append(val.strftime("%Y-%m-%d %H:%M:%S"))
-            # Se for um tipo NumPy genérico, converte para o tipo Python nativo
             elif isinstance(val, np.generic):
                 new_row.append(val.item())
             else:
@@ -71,7 +67,6 @@ def insert_data(conn, table_name, df, batch_size=1000):
         data.append(tuple(new_row))
     
     cursor = conn.cursor()
-    # Inserir em lotes para reduzir a carga na conexão
     for i in range(0, len(data), batch_size):
         batch = data[i : i + batch_size]
         cursor.executemany(insert_stmt, batch)
@@ -79,16 +74,16 @@ def insert_data(conn, table_name, df, batch_size=1000):
     cursor.close()
 
 if __name__ == "__main__":
-    # Carregar variáveis de ambiente para acesso ao MinIO e buckets
+    # Variáveis de ambiente para acesso ao MinIO e bucket GOLD
     minio_endpoint   = os.getenv("ENDPOINT_URL", "http://localhost:9000")
     minio_access_key = os.getenv("MINIO_ROOT_USER", "minio")
     minio_secret_key = os.getenv("MINIO_ROOT_PASSWORD", "minio123")
     gold_bucket      = os.getenv("GOLD_BUCKET", "gold")
     
-    # Lista de tabelas (pastas) na camada Gold que serão exportadas
+    # Tabelas a serem exportadas: somente "atracacao" e "carga"
     table_list = [
         "atracacao",
-        "carga",
+        "carga"
     ]
 
     # Conexão com DuckDB
@@ -98,18 +93,20 @@ if __name__ == "__main__":
     con.execute("INSTALL httpfs;")
     con.execute("LOAD httpfs;")
     con.execute("SET s3_use_ssl=false;")
-
-    # Configura os parâmetros de acesso ao MinIO
+    
+    # Configura os parâmetros de acesso ao MinIO e força o uso de path-style
     endpoint_limp = minio_endpoint.replace("http://", "").replace("https://", "")
     con.execute(f"SET s3_endpoint='{endpoint_limp}';")
     con.execute("SET s3_url_style='path';")
+    con.execute("SET s3_force_path_style=true;")  # Força o formato path-style
     con.execute(f"SET s3_access_key_id='{minio_access_key}';")
     con.execute(f"SET s3_secret_access_key='{minio_secret_key}';")
-    con.execute("SET s3_region='us-east-1';")  # Ajuste se necessário
+    con.execute("SET s3_region='us-east-1';")  # Ajuste conforme necessário
 
-    # Loop para cada tabela na camada Gold
+    # Loop para cada tabela a ser processada
     for table_name in table_list:
-        # Ajuste o caminho conforme sua estrutura de partição (_execution_date)
+        # Ajuste o caminho conforme sua estrutura de partição; 
+        # neste exemplo, presume-se que os arquivos estejam em: /<tabela>/_execution_date=*/*.parquet
         parquet_path = f"s3://{gold_bucket}/{table_name}/_execution_date=*/*.parquet"
         print(f"\n[INFO] Lendo Parquet via DuckDB: {parquet_path}")
         try:
@@ -134,4 +131,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"[ERROR] Falha ao processar a tabela '{table_name}': {e}")
 
-    print("\n[INFO] Processo concluído. Todas as tabelas foram exportadas para o MySQL.")
+    print("\n[INFO] Processo concluído. As tabelas foram exportadas para o MySQL.")
