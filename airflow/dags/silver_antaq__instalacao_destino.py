@@ -12,20 +12,20 @@ default_args = {
 }
 
 with DAG(
-    dag_id="silver_antaq__carga_dag",
+    dag_id="silver_antaq__instalacao_destino_dag",
     default_args=default_args,
-    description="Silver Carga files to Silver Delta table",
+    description="Silver Instalacao files to Silver Delta table",
     schedule_interval='0 12 1 * *',
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    tags=["silver", "carga", "monthly", "antaq"],
+    tags=["silver", "instalacao", "destino", "monthly", "antaq"],
 ) as dag:
 
     start = EmptyOperator(task_id="start")
 
     # Lista dos scripts a serem executados
     carga_scripts = [
-        "silver_antaq__carga.py",
+        "silver_antaq__instalacao_destino.py",
     ]
 
     # Cria uma tarefa para cada script usando BashOperator e spark-submit

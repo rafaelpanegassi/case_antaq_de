@@ -88,18 +88,7 @@ if __name__ == "__main__":
     # Lista de tabelas (pastas) na camada Gold que serão exportadas
     table_list = [
         "atracacao",
-        "carga_conteinerizada",
-        "carga_hidrovia",
-        "carga_regiao",
-        "carga_rio",
         "carga",
-        "instalacao_destino",
-        "instalacao_origem",
-        "mercadoria",
-        "mercadoriaconteinerizada",
-        "taxaocupacao",
-        "taxaocupacaocomcarga",
-        "taxaocupacaototatracacao"
     ]
 
     # Conexão com DuckDB
