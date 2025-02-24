@@ -5,6 +5,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.sensors.external_task import ExternalTaskSensor
 
 default_args = {
     'owner': 'airflow',
@@ -17,12 +18,22 @@ default_args = {
 with DAG(
     dag_id="antaq__atracacao_monthly_dag",
     default_args=default_args,
-    description="Unified pipeline to run Bronze, Silver, and Gold layers for atracacao",
+    description="Unified pipeline to run Bronze, Silver, and Gold layers for atracacao, dependent on crawler DAG",
     schedule_interval='0 12 1 * *',
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=["antaq", "atracacao", "monthly", "bronze", "silver", "gold"],
 ) as dag:
+
+    # Sensor that waits for the final task ("end") in the crawler DAG
+    wait_for_crawler = ExternalTaskSensor(
+        task_id="wait_for_crawler",
+        external_dag_id="antaq__crawler_dag",  # Replace with the actual crawler DAG ID
+        external_task_id="end",               # Replace with the final task ID in your crawler DAG
+        poke_interval=60,                     # Check every 60 seconds
+        timeout=60 * 60,                      # Timeout after 1 hour (adjust as needed)
+        mode="poke"                           # 'poke' or 'reschedule'
+    )
 
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
@@ -80,5 +91,5 @@ with DAG(
                 bash_command=bash_command,
             )
 
-    # Define the execution order: Bronze >> Silver >> Gold
-    start >> bronze_group >> silver_group >> gold_group >> end
+    # Define the execution order: first wait for crawler, then run Bronze >> Silver >> Gold
+    wait_for_crawler >> start >> bronze_group >> silver_group >> gold_group >> end
