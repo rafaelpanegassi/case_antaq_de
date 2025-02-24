@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     spark = (
         SparkSession.builder
-        .appName("SilverAtracacaoDelta")
+        .appName("SilverCargaDelta")
         .master("local[*]")
         .config("spark.hadoop.fs.s3a.endpoint", minio_endpoint)
         .config("spark.hadoop.fs.s3a.access.key", minio_access_key)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         .getOrCreate()
     )
 
-    bronze_path = f"s3a://{bronze_bucket}/atracacao/atracacao/*-{execution_date}.txt"
+    bronze_path = f"s3a://{bronze_bucket}/carga/carga/*-{execution_date}.txt"
     logger.info(f"Reading bronze files: {bronze_path}")
 
     df = (
@@ -76,20 +76,24 @@ if __name__ == "__main__":
             df = df.withColumn(c, lower(trim(remove_accents_udf(col(c)))))
 
     data_columns = [
-        "data_atracacao",
-        "data_chegada",
-        "data_desatracacao",
-        "data_inicio_operacao",
-        "data_termino_operacao"
     ]
     for c in data_columns:
         if c in df.columns:
             df = df.withColumn(c, to_timestamp(col(c), "dd/MM/yyyy HH:mm:ss"))
 
     int_columns = [
+        "idcarga",
         "idatracacao",
-        "ano",
-        "flagmcoperacaoatracacao"
+        "flagcabotagem",
+        "flagcabotagemmovimentacao",
+        "flagconteinertamanho",
+        "flaglongocurso",
+        "flagmcoperacaocarga",
+        "flagoffshore",
+        "flagtransporteviainterioir",
+        "teu",
+        "qtcarga",
+        "vlpesocargabruta"
     ]
     for c in int_columns:
         if c in df.columns:
@@ -98,7 +102,7 @@ if __name__ == "__main__":
     df = df.withColumn("_execution_date", lit(execution_date))
     df = df.withColumn("_processed_at", current_timestamp())
 
-    delta_output_path = f"s3a://{silver_bucket}/atracacao/"
+    delta_output_path = f"s3a://{silver_bucket}/carga/"
     (
         df.write
         .format("delta")

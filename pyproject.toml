@@ -15,6 +15,10 @@ flake8 = "^7.1.2"
 isort = "^6.0.0"
 loguru = "^0.7.3"
 apache-airflow = "^2.10.5"
+pyspark = "^3.5.4"
+delta-spark = "^3.3.0"
+deltalake = "^0.25.1"
+pyarrow = "^18.0.1"
 
 [build-system]
 requires = ["poetry-core"]
