@@ -18,7 +18,7 @@ with DAG(
     'antaq_crawler_dag',
     default_args=default_args,
     description='Run ANTAQ crawler to download and process ZIP files into MinIO',
-    schedule_interval='0 12 1 * *',
+    schedule_interval='0 7 1 * *',
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=['antaq', 'monthly', 'crawler'],
