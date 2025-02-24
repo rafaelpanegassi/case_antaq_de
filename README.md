@@ -90,36 +90,15 @@ http://localhost:3306/
 
 1 - Install java to run `Pyspark`:
 ```bash
-apt-get update && \
-apt-get install -y openjdk-17-jdk && \
-apt-get clean
+bash local_workspace/run_all_pipe.sh
 ```
 
-2 - Setup java path:
+**NOTE:** It may be necessary to execute run_all_pipe.sh executable.
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-export PATH=$JAVA_HOME/bin:$PATH
+chmod +x local_workspace/run_all_pipe.sh
 ```
 
-3 - To run Crawler:
-```bash
-poetry run python jobs/crawlers/crawler_antaq.py
-```
 
-4 - To run bronze scripts:
-```bash
-poetry run python jobs/bronze/script_name.py
-```
-
-5 - To run silver scripts:
-```bash
-spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.1,io.delta:delta-spark_2.12:3.3.0 jobs/silver/script_name.py
-```
-
-6 - To run sigoldlver scripts:
-```bash
-spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.1,io.delta:delta-spark_2.12:3.3.0 jobs/gold/script_name.py
-```
 
 ### Questionário
 
