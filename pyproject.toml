@@ -19,6 +19,10 @@ pyspark = "^3.5.4"
 delta-spark = "^3.3.0"
 deltalake = "^0.25.1"
 pyarrow = "^18.0.1"
+duckdb = "^1.2.0"
+mysql-connector-python = "^9.2.0"
+pandas = "^2.2.3"
+pymysql = "^1.1.1"
 
 [build-system]
 requires = ["poetry-core"]
