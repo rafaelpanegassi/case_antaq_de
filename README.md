@@ -38,12 +38,12 @@ After completing steps 1 and 2, and with the `.env` variable file configured:
 
 3 - Set the Python version with `pyenv`:
 ```bash
-pyenv local 3.12.2
+pyenv local 3.12.4
 ```
 
 4 - Create the virtual environment:
 ```bash
-poetry env use 3.12.2
+poetry env use 3.12.4
 ```
 
 5 - Activate the virtual environment:
