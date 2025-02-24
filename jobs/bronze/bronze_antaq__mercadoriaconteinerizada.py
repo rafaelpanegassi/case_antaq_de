@@ -36,7 +36,7 @@ def copy_file():
     destination_bucket = os.getenv("BRONZE_BUCKET")
 
     source_key = f"register/MercadoriaConteinerizada_register-{today_str}.txt"
-    destination_key = f"mercadoria/mercadoria_conteinerizada/MercadoriaConteinerizada_register-{today_str}.txt"
+    destination_key = f"mercadoria/mercadoriaconteinerizada/MercadoriaConteinerizada_register-{today_str}.txt"
 
     s3_client = create_s3_client()
     copy_source = {"Bucket": source_bucket, "Key": source_key}

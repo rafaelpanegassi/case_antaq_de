@@ -56,7 +56,7 @@ if __name__ == "__main__":
         .getOrCreate()
     )
 
-    bronze_path = f"s3a://{bronze_bucket}/mercadoria/mercadoria_conteinerizada/*-{execution_date}.txt"
+    bronze_path = f"s3a://{bronze_bucket}/mercadoria/mercadoriaconteinerizada/*-{execution_date}.txt"
     logger.info(f"Reading bronze files: {bronze_path}")
 
     df = (
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     df = df.withColumn("_execution_date", lit(execution_date))
     df = df.withColumn("_processed_at", current_timestamp())
 
-    delta_output_path = f"s3a://{silver_bucket}/mercadoria_conteinerizada/"
+    delta_output_path = f"s3a://{silver_bucket}/mercadoriaconteinerizada/"
     (
         df.write
         .format("delta")
