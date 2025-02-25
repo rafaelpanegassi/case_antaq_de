@@ -26,4 +26,4 @@ java -version
 echo "Running Gold-to-DB ingestion script..."
 spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.1,io.delta:delta-spark_2.12:3.3.0,mysql:mysql-connector-java:8.0.33,io.delta:delta-core_2.12:2.4.0 jobs/gold_to_db/ingest_gold_to_db.py
 
-echo "Ingestion to database script executed successfully."
+echo "Ingestion to database script executed successfully...."
