@@ -44,8 +44,7 @@ services:
       - MYSQL_DATABASE=antaq
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=admin
-    volumes:
-      - ./mysql_data:/var/lib/mysql  # Persistência dos dados do MySQL no host
+    # Removed the volumes section entirely
     restart: unless-stopped
     networks:
       - airflow
