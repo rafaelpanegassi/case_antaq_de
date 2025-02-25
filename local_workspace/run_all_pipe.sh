@@ -1,6 +1,39 @@
 #!/usr/bin/env bash
 set -e  # Exit immediately if a command fails
 
+# Navigate to the airflow directory and start Astro in background
+echo "Starting services..."
+cd airflow
+astro dev start &
+
+# Wait for services to be ready (Airflow, MinIO, and MySQL) with retries
+echo "Waiting for services to be ready..."
+
+# Wait for Airflow (assuming Airflow webserver is available on http://localhost:8080)
+until curl -s http://localhost:8080 > /dev/null; do
+    echo "Waiting for Airflow (port 8080)..."
+    sleep 60
+done
+echo "Airflow is up and running!"
+
+# Wait for MinIO (assuming MinIO is available on http://localhost:9000)
+until curl -s http://localhost:9000 > /dev/null; do
+    echo "Waiting for MinIO (port 9000)..."
+    sleep 60
+done
+echo "MinIO is up and running!"
+
+# Wait for MySQL (assuming MySQL health check is available, e.g., via a simple TCP check on port 3306)
+# Note: MySQL doesn't typically have a web endpoint, so we'll use a similar approach to check the port
+until curl -s --head --connect-timeout 5 http://localhost:3306 > /dev/null 2>&1 || nc -z localhost 3306 2>/dev/null; do
+    echo "Waiting for MySQL (port 3306)..."
+    sleep 60
+done
+echo "MySQL is up and running!"
+
+# Return to the parent directory
+cd ..
+
 echo "Updating package list and installing OpenJDK 17..."
 sudo apt-get update && \
     sudo apt-get install -y openjdk-17-jdk && \
