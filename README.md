@@ -1,104 +1,124 @@
-CASE ANTAQ - DATA ENGINEERING
-========
+# Case ANTAQ - Data Engineering
 
-## How to run this project
+This repository contains an end-to-end data engineering pipeline that scrapes maritime transport data from [Agência Nacional de Transportes Aquaviários (ANTAQ)](https://web3.antaq.gov.br/ea/sense/download.html#pt). The pipeline leverages MinIO as a data lake, processing raw data through a layered architecture (Raw → Bronze → Silver → Gold) before ingesting it into MySQL. This project showcases web scraping, data transformation, and workflow orchestration using tools like Apache Airflow and Docker.
 
-This section explains how to run the project.
+---
 
-All the steps here are intended for a `bash` terminal.
+## How to Run This Project
 
-The project setup uses [`pyenv`](https://github.com/pyenv/pyenv), [`poetry`](https://python-poetry.org/), [`astro-cli`](https://www.astronomer.io/docs/astro/cli/overview/) and [`docker`](https://www.docker.com/).
+This section guides you through setting up and running the project using a `bash` terminal.
 
-1 - Clone the repo locally:
-```bash
-git https://github.com/rafaelpanegassi/case_antaq_de.git
-```
+### Prerequisites
+- [`pyenv`](https://github.com/pyenv/pyenv) - Python version management
+- [`poetry`](https://python-poetry.org/) - Dependency management
+- [`astro-cli`](https://www.astronomer.io/docs/astro/cli/overview/) - Airflow orchestration
+- [`docker`](https://www.docker.com/) - Containerization
 
-2 - Access the project directory:
-```bash
-cd case_antaq_de
-```
+### Setup Instructions
 
-To run this properly, it's necessary to create the `.env` variable file in the root of the project. An example can be found in [.env-example](.env-example). The default configuration to connect with MongoDB is:
-```
-ENDPOINT_URL=http://minio:9000
-MINIO_ROOT_USER=minio_admin
-MINIO_ROOT_PASSWORD=minio_password
-REGION_NAME=us-east-1
-RAW_BUCKET=raw
-BRONZE_BUCKET=bronze
-SILVER_BUCKET=silver
-GOLD_BUCKET=gold
-BASE_URL=https://web3.antaq.gov.br/ea/txt/
-```
+1. **Clone the Repository**
 
-### Local Setup
+    ```bash
+    git clone https://github.com/rafaelpanegassi/case_antaq_de.git
+    ```
 
-After completing steps 1 and 2, and with the `.env` variable file configured:
+    ```bash
+    cd case_antaq_de
+    ```
 
-3 - Set the Python version with `pyenv`:
-```bash
-pyenv local 3.12.4
-```
+2. **Configure Environment Variables**
 
-4 - Create the virtual environment:
-```bash
-poetry env use 3.12.4
-```
+    - Create a .env file in the project root based on .env-example.
+    - Default MinIO configuration:
+    ```
+    ENDPOINT_URL=http://minio:9000
+    MINIO_ROOT_USER=minio_admin
+    MINIO_ROOT_PASSWORD=minio_password
+    REGION_NAME=us-east-1
+    RAW_BUCKET=raw
+    BRONZE_BUCKET=bronze
+    SILVER_BUCKET=silver
+    GOLD_BUCKET=gold
+    BASE_URL=https://web3.antaq.gov.br/ea/txt/
+    ```
 
-5 - Activate the virtual environment:
-```bash
-poetry shell
-```
+3. **Set Python Version**
 
-6 - Install dependencies:
-```bash
-poetry install
-```
+    - Set the Python version with `pyenv`:
+    ```bash
+    pyenv local 3.12.4
+    ```
 
-Go to airflow directory:
-```bash
-cd airflow
-```
+4. **Set Up Virtual Environment**
 
-Build the images:
-```bash
-astro dev start
-```
+    - Create the virtual environment:
+    ```bash
+    poetry env use 3.12.4
+    poetry shell
+    poetry install
+    ```
+5. **Run All Services**
 
-Access the local host airflow:
-```
-http://localhost:8080/
-```
-Access the local host minio:
-```
-http://localhost:9001/
-```
+    - At root directory run bash:
+    ```bash
+    bash local_workspace/run_all_services.sh
+    ```
 
-Access the local host mysql:
-```
-http://localhost:3306/
-```
+6. **Access Local Services**
+    - Airflow: `http://localhost:8080`
+    - MiniO:   `http://localhost:9001`
+    - MySQL:   `http://localhost:3306`
 
-### Setup Dags Activate in airflow
+**NOTE:** Default credentials are `minio_admin/minio_password `for MinIO and `admin/admin` for Airflow/MySQL based on your setup.
 
-**NOTE:** Activate dags in this sequence: crawler, bronze, silver and gold.
+### Manual Execution
 
+To run the pipeline steps individually:
 
-### To Run Manually
+1. **Crawl Data**
 
+    - Scrapes data from ANTAQ and stores it in the Raw layer.
 
-1 - Install java to run `Pyspark`:
-```bash
-bash local_workspace/run_all_pipe.sh
-```
+    ```bash
+    bash local_workspace/run_crawler.sh
+    ```
+2. **Process Bronze Layer**
 
-**NOTE:** It may be necessary to execute run_all_pipe.sh executable.
-```bash
-chmod +x local_workspace/run_all_pipe.sh
-```
+    - Only copy our raw data to bronze.
 
+    ```bash
+    bash local_workspace/run_bronze_pipelines.sh
+    ```
 
+3. **Process Silver Layer**
+
+    - Cleans and structures raw data.
+
+    ```bash
+    bash local_workspace/run_silver_pipelines.sh
+    ```
+
+4. **Process Gold Layer**
+
+    - Further refine data to make it ready for use.
+
+    ```bash
+    bash local_workspace/run_gold_pipelines.sh
+    ```
+
+5. **Ingest into MySQL**
+
+    - Loads Gold data into MySQL tables.
+
+    ```bash
+    bash local_workspace/run_gold_to_db.sh
+    ```
+
+### Project Structure
+- `local_workspace/` - Scripts for running services and pipelines with bash.
+- `.env-example` - Template for environment variables.
+- `jobs` - All scripts for each layer.
+- `dags` - Located in the Airflow directory.
 
 ### Questionário
 
