@@ -29,7 +29,6 @@ This section guides you through setting up and running the project using a `bash
 2. **Configure Environment Variables**
 
     - Create a .env file in the project root based on .env-example.
-    - Default MinIO configuration:
     ```
     ENDPOINT_URL=http://minio:9000
     MINIO_ROOT_USER=minio_admin
@@ -115,7 +114,7 @@ To run the pipeline steps individually:
     ```
 
 ### Project Structure
-- `local_workspace/` - Scripts for running services and pipelines with bash.
+- `local_workspace/` - Bash scripts for running services and pipelines.
 - `.env-example` - Template for environment variables.
 - `jobs` - All scripts for each layer.
 - `dags` - Located in the Airflow directory.
