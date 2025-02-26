@@ -11,13 +11,18 @@ minio_access_key = os.getenv("MINIO_ROOT_USER")
 minio_secret_key = os.getenv("MINIO_ROOT_PASSWORD")
 gold_bucket = os.getenv("GOLD_BUCKET")
 
-# MySQL settings
-mysql_config = {
-    "url": "jdbc:mysql://localhost:3306/antaq",
-    "driver": "com.mysql.cj.jdbc.Driver",
-    "user": "root",
-    "password": "rootmysql"
-}
+# MySQL settings (loaded from .env)
+mysql_host = os.getenv("MYSQL_HOST", "localhost")  # Default to localhost if not set
+mysql_port = os.getenv("MYSQL_PORT", "3306")  # Default to 3306 if not set
+mysql_database = os.getenv("MYSQL_DATABASE", "antaq")
+mysql_user = os.getenv("MYSQL_USER", "root")
+mysql_password = os.getenv("MYSQL_PASSWORD", "rootmysql")
+
+# Build the JDBC URL dynamically
+mysql_jdbc_url = f"jdbc:mysql://{mysql_host}:{mysql_port}/{mysql_database}"
+
+# MySQL driver configuration (remains static)
+mysql_driver = "com.mysql.cj.jdbc.Driver"
 
 # Configure SparkSession for Delta Lake and MinIO compatibility
 spark = SparkSession.builder \
@@ -47,22 +52,23 @@ def load_to_mysql(table_path, table_name):
         # Print basic information (optional, for debugging)
         print(f"Loading table {table_name} with {df.count()} records")
         
-        # Save to MySQL
+        # Save to MySQL with append mode and adjusted batch size
         df.write \
             .format("jdbc") \
-            .option("url", mysql_config["url"]) \
-            .option("driver", mysql_config["driver"]) \
+            .option("url", mysql_jdbc_url) \
+            .option("driver", mysql_driver) \
             .option("dbtable", table_name) \
-            .option("user", mysql_config["user"]) \
-            .option("password", mysql_config["password"]) \
-            .mode("overwrite") \
-            .option("batchsize", "1000") \
+            .option("user", mysql_user) \
+            .option("password", mysql_password) \
+            .mode("append") \
+            .option("batchsize", "500") \
             .save()
         
         print(f"Table {table_name} loaded successfully into MySQL!")
         
     except Exception as e:
         print(f"Error processing {table_name}: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     # List of (table_path, table_name) tuples
