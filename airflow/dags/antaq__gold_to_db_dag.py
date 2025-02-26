@@ -28,7 +28,7 @@ with DAG(
         "spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.1,"
         "io.delta:delta-spark_2.12:3.3.0,"
         "mysql:mysql-connector-java:8.0.33,"
-        "io.delta:delta-core_2.12:2.4.0 jobs/gold_to_db/ingest_gold_to_db.py"
+        "io.delta:delta-core_2.12:2.4.0 /opt/airflow/jobs/gold_to_db/ingest_gold_to_db.py"
     )
 
     ingest_gold_to_db = BashOperator(
