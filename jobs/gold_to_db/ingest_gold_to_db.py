@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # MinIO settings (using S3-compatible endpoint)
-minio_endpoint = "http://localhost:9000"
+minio_endpoint = os.getenv("ENDPOINT_URL")
 minio_access_key = os.getenv("MINIO_ROOT_USER")
 minio_secret_key = os.getenv("MINIO_ROOT_PASSWORD")
 gold_bucket = os.getenv("GOLD_BUCKET")
