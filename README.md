@@ -2,6 +2,8 @@
 
 This repository contains an end-to-end data engineering pipeline that scrapes maritime transport data from [Agência Nacional de Transportes Aquaviários (ANTAQ)](https://web3.antaq.gov.br/ea/sense/download.html#pt). The pipeline leverages MinIO as a data lake, processing raw data through a layered architecture (Raw → Bronze → Silver → Gold) before ingesting it into MySQL. This project showcases web scraping, data transformation, and workflow orchestration using tools like Apache Airflow and Docker.
 
+<img src="media/architecture.png" style="width: 100%;">
+
 ---
 
 ## How to Run This Project
